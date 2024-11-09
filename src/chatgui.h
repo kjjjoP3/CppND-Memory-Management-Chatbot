@@ -2,85 +2,81 @@
 #define CHATGUI_H_
 
 #include <wx/wx.h>
+#include <memory>
 
 class ChatLogic; // forward declaration
 
-// middle part of the window containing the dialog between user and chatbot
+// Panel chính trong cửa sổ hiển thị cuộc trò chuyện giữa người dùng và chatbot
 class ChatBotPanelDialog : public wxScrolledWindow
 {
 private:
-    // control elements
+    // Các điều khiển giao diện
     wxBoxSizer *_dialogSizer;
-    wxBitmap _image;
+    wxBitmap _image;  // Hình ảnh hiển thị
 
-    //// STUDENT CODE
-    ////
-
-    ChatLogic *_chatLogic;
-
-    ////
-    //// EOF STUDENT CODE
+    // Kết nối với logic của Chatbot
+    std::unique_ptr<ChatLogic> _chatLogic;
 
 public:
-    // constructor / destructor
+    // Constructor và Destructor
     ChatBotPanelDialog(wxWindow *parent, wxWindowID id);
     ~ChatBotPanelDialog();
 
-    // getter / setter
-    ChatLogic *GetChatLogicHandle() { return _chatLogic; }
+    // Getter cho ChatLogic
+    ChatLogic* GetChatLogicHandle() { return _chatLogic.get(); }
 
-    // events
+    // Các sự kiện
     void paintEvent(wxPaintEvent &evt);
     void paintNow();
     void render(wxDC &dc);
 
-    // proprietary functions
+    // Các hàm nội bộ
     void AddDialogItem(wxString text, bool isFromUser = true);
     void PrintChatbotResponse(std::string response);
 
     DECLARE_EVENT_TABLE()
 };
 
-// dialog item shown in ChatBotPanelDialog
+// Đối tượng hiển thị một phần cuộc hội thoại trong ChatBotPanelDialog
 class ChatBotPanelDialogItem : public wxPanel
 {
 private:
-    // control elements
+    // Các điều khiển giao diện
     wxStaticBitmap *_chatBotImg;
     wxStaticText *_chatBotTxt;
 
 public:
-    // constructor / destructor
+    // Constructor và Destructor
     ChatBotPanelDialogItem(wxPanel *parent, wxString text, bool isFromUser);
 };
 
-// frame containing all control elements
+// Khung chứa tất cả các điều khiển
 class ChatBotFrame : public wxFrame
 {
 private:
-    // control elements
+    // Các điều khiển giao diện
     ChatBotPanelDialog *_panelDialog;
     wxTextCtrl *_userTextCtrl;
 
-    // events
+    // Xử lý sự kiện khi người dùng nhấn Enter
     void OnEnter(wxCommandEvent &WXUNUSED(event));
 
 public:
-    // constructor / desctructor
+    // Constructor và Destructor
     ChatBotFrame(const wxString &title);
 };
 
-// control panel for background image display
+// Panel hiển thị hình nền trong khung ChatBotFrame
 class ChatBotFrameImagePanel : public wxPanel
 {
-    // control elements
+    // Các điều khiển giao diện
     wxBitmap _image;
 
 public:
-    // constructor / desctructor
+    // Constructor và Destructor
     ChatBotFrameImagePanel(wxFrame *parent);
 
-    // events
+    // Các sự kiện
     void paintEvent(wxPaintEvent &evt);
     void paintNow();
     void render(wxDC &dc);
@@ -88,11 +84,11 @@ public:
     DECLARE_EVENT_TABLE()
 };
 
-// wxWidgets app that hides main()
+// Ứng dụng wxWidgets, không cần hàm main()
 class ChatBotApp : public wxApp
 {
 public:
-    // events
+    // Khởi tạo ứng dụng
     virtual bool OnInit();
 };
 

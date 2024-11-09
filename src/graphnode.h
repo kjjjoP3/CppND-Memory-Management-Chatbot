@@ -5,55 +5,46 @@
 #include <string>
 #include "chatbot.h"
 
-
-// forward declarations
+// Forward declarations
 class GraphEdge;
 
 class GraphNode
 {
 private:
-    //// STUDENT CODE
-    ////
+    // Data members (owned)
+    std::vector<std::unique_ptr<GraphEdge>> _childEdges;  // Edges to subsequent nodes
 
-    // data handles (owned)
-    std::vector<GraphEdge *> _childEdges;  // edges to subsequent nodes
+    // Data members (not owned)
+    std::vector<GraphEdge *> _parentEdges; // Edges to preceding nodes 
+    ChatBot _chatBot; // The associated chatbot for this node
 
-    // data handles (not owned)
-    std::vector<GraphEdge *> _parentEdges; // edges to preceding nodes 
-    ChatBot *_chatBot;
-
-    ////
-    //// EOF STUDENT CODE
-
-    // proprietary members
+    // Node identifier
     int _id;
+
+    // List of answers for this node
     std::vector<std::string> _answers;
 
 public:
-    // constructor / destructor
-    GraphNode(int id);
-    ~GraphNode();
+    // Constructor and Destructor
+    GraphNode(int nodeId);  // Constructor to initialize node with an ID
+    ~GraphNode();           // Destructor to clean up resources
 
-    // getter / setter
-    int GetID() { return _id; }
-    int GetNumberOfChildEdges() { return _childEdges.size(); }
-    GraphEdge *GetChildEdgeAtIndex(int index);
-    std::vector<std::string> GetAnswers() { return _answers; }
-    int GetNumberOfParents() { return _parentEdges.size(); }
+    // Getter functions
+    int GetID() const { return _id; }
+    int GetNumberOfChildEdges() const { return static_cast<int>(_childEdges.size()); }
+    GraphEdge *GetChildEdgeAtIndex(int index) const;
+    const std::vector<std::string>& GetAnswers() const { return _answers; }
+    int GetNumberOfParents() const { return static_cast<int>(_parentEdges.size()); }
 
-    // proprietary functions
-    void AddToken(std::string token); // add answers to list
+    // Add a token to the answers list
+    void AddToken(const std::string& token);
+
+    // Add edge functions
     void AddEdgeToParentNode(GraphEdge *edge);
-    void AddEdgeToChildNode(GraphEdge *edge);
+    void AddEdgeToChildNode(std::unique_ptr<GraphEdge> edge);
 
-    //// STUDENT CODE
-    ////
-
-    void MoveChatbotHere(ChatBot *chatbot);
-
-    ////
-    //// EOF STUDENT CODE
-
+    // Move chatbot-related functions
+    void MoveChatbotHere(ChatBot chatbot);
     void MoveChatbotToNewNode(GraphNode *newNode);
 };
 
