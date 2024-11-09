@@ -13,41 +13,41 @@ class GraphNode;
 class ChatLogic
 {
 private:
-    //// STUDENT CODE
-    ////
-
-    // data handles (owned)
+    // Data handles (owned) - Nodes are owned by ChatLogic class through unique_ptr
     std::vector<std::unique_ptr<GraphNode>> _nodes;
 
-    ////
-    //// EOF STUDENT CODE
+    // The panel dialog that handles communication between the UI and ChatLogic
+    ChatBotPanelDialog *_panelDialog = nullptr;
 
-    // data handles (not owned)
-    GraphNode *_currentNode;
-    ChatBot *_chatBot;
-    ChatBotPanelDialog *_panelDialog;
+    // The chatbot instance that communicates with the user
+    ChatBot *_chatBot = nullptr;
 
-    // proprietary type definitions
-    typedef std::vector<std::pair<std::string, std::string>> tokenlist;
-
-    // proprietary functions
+    // Utility function for adding tokens to graph nodes or edges
     template <typename T>
     void AddAllTokensToElement(std::string tokenID, tokenlist &tokens, T &element);
 
 public:
-    // constructor / destructor
+    // Constructor and Destructor
     ChatLogic();
     ~ChatLogic();
 
-    // getter / setter
+    // Load the answer graph from a file
+    void LoadAnswerGraphFromFile(std::string filename);
+
+    // Set the panel dialog handle (used for UI)
     void SetPanelDialogHandle(ChatBotPanelDialog *panelDialog);
+
+    // Set the chatbot handle
     void SetChatbotHandle(ChatBot *chatbot);
 
-    // proprietary functions
-    void LoadAnswerGraphFromFile(std::string filename);
+    // Send a message to the chatbot
     void SendMessageToChatbot(std::string message);
+
+    // Send a message to the user (UI)
     void SendMessageToUser(std::string message);
+
+    // Get the image associated with the chatbot
     wxBitmap *GetImageFromChatbot();
 };
 
-#endif /* CHATLOGIC_H_ */
+#endif // CHATLOGIC_H_

@@ -4,46 +4,42 @@
 #include <vector>
 #include <string>
 #include "chatbot.h"
+#include <memory>  // Cần thiết cho việc sử dụng smart pointers
 
-// Forward declarations
+// forward declarations
 class GraphEdge;
 
 class GraphNode
 {
 private:
-    // Data members (owned)
-    std::vector<std::unique_ptr<GraphEdge>> _childEdges;  // Edges to subsequent nodes
+    // Dữ liệu mà GraphNode sở hữu (quản lý bộ nhớ)
+    std::vector<std::unique_ptr<GraphEdge>> _childEdges;  // Dùng unique_ptr để sở hữu GraphEdge
+    // Dữ liệu không sở hữu (chỉ tham chiếu)
+    std::vector<GraphEdge *> _parentEdges;  // Các cạnh tới các node cha
 
-    // Data members (not owned)
-    std::vector<GraphEdge *> _parentEdges; // Edges to preceding nodes 
-    ChatBot _chatBot; // The associated chatbot for this node
+    ChatBot _chatBot;  // Sử dụng ChatBot trong node mà không cần con trỏ
 
-    // Node identifier
-    int _id;
-
-    // List of answers for this node
-    std::vector<std::string> _answers;
+    int _id;  // Mã ID của GraphNode
+    std::vector<std::string> _answers;  // Các câu trả lời (token)
 
 public:
-    // Constructor and Destructor
-    GraphNode(int nodeId);  // Constructor to initialize node with an ID
-    ~GraphNode();           // Destructor to clean up resources
+    // Constructor / Destructor
+    GraphNode(int id);
+    ~GraphNode();
 
-    // Getter functions
+    // Getter / Setter
     int GetID() const { return _id; }
-    int GetNumberOfChildEdges() const { return static_cast<int>(_childEdges.size()); }
-    GraphEdge *GetChildEdgeAtIndex(int index) const;
-    const std::vector<std::string>& GetAnswers() const { return _answers; }
-    int GetNumberOfParents() const { return static_cast<int>(_parentEdges.size()); }
+    int GetNumberOfChildEdges() const { return _childEdges.size(); }
+    GraphEdge *GetChildEdgeAtIndex(int index);
+    std::vector<std::string> GetAnswers() const { return _answers; }
+    int GetNumberOfParents() const { return _parentEdges.size(); }
 
-    // Add a token to the answers list
-    void AddToken(const std::string& token);
-
-    // Add edge functions
+    // Hàm thêm dữ liệu vào
+    void AddToken(std::string token);
     void AddEdgeToParentNode(GraphEdge *edge);
     void AddEdgeToChildNode(std::unique_ptr<GraphEdge> edge);
 
-    // Move chatbot-related functions
+    // Hàm di chuyển chatbot
     void MoveChatbotHere(ChatBot chatbot);
     void MoveChatbotToNewNode(GraphNode *newNode);
 };

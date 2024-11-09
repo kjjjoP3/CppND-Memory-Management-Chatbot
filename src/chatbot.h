@@ -19,27 +19,32 @@ private:
     ChatLogic *_chatLogic;
 
     // proprietary functions
-    int ComputeLevenshteinDistance(std::string s1, std::string s2);
+    int ComputeLevenshteinDistance(std::string s1, std::string s2); // number of characters that differs between strings -> 0 = same 
 
 public:
     // constructors / destructors
     ChatBot();                     // constructor WITHOUT memory allocation
-    ChatBot(std::string filename); // constructor WITH memory allocation
+    ChatBot(std::string filename);  // constructor WITH memory allocation
     ~ChatBot();
 
-    //// STUDENT CODE
-    ////
-    ChatBot(const ChatBot &source);            // copy constructor
-    ChatBot &operator=(const ChatBot &source); // copy assignment constructor
-    ChatBot(ChatBot &&source);                 // move constructor
-    ChatBot &operator=(ChatBot &&source);      // move assignment constructor
-    ////
-    //// EOF STUDENT CODE
+    // Task 2: declare the overloaded functions -> define in *.cpp
+    // 2. Copy constructor 
+    ChatBot(const ChatBot &source);
 
+    // 3. Copy Assignment Operator
+    ChatBot &operator=(const ChatBot &source);
+
+    // 4. Move Constructor
+    ChatBot(ChatBot &&source);
+
+    // 5. Move Assignment Operator 
+    ChatBot &operator=(ChatBot &&source);
+    
     // getters / setters
     void SetCurrentNode(GraphNode *node);
     void SetRootNode(GraphNode *rootNode) { _rootNode = rootNode; }
     void SetChatLogicHandle(ChatLogic *chatLogic) { _chatLogic = chatLogic; }
+    ChatLogic* GetChatLogicHandle() { return _chatLogic; }
     wxBitmap *GetImageHandle() { return _image; }
 
     // communication

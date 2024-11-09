@@ -2,15 +2,15 @@
 #include <random>
 #include <algorithm>
 #include <ctime>
-
-#include "chatlogic.h"
+#include "chatbot.h"
 #include "graphnode.h"
 #include "graphedge.h"
-#include "chatbot.h"
+#include "chatlogic.h"
 
 // constructor WITHOUT memory allocation
 ChatBot::ChatBot()
 {
+    // invalidate data handles
     _image = nullptr;
     _chatLogic = nullptr;
     _rootNode = nullptr;
@@ -20,6 +20,8 @@ ChatBot::ChatBot()
 ChatBot::ChatBot(std::string filename)
 {
     std::cout << "ChatBot Constructor" << std::endl;
+    
+    // invalidate data handles
     _chatLogic = nullptr;
     _rootNode = nullptr;
 
@@ -27,79 +29,109 @@ ChatBot::ChatBot(std::string filename)
     _image = new wxBitmap(filename, wxBITMAP_TYPE_PNG);
 }
 
+// Destructor
 ChatBot::~ChatBot()
 {
-    std::cout << "ChatBot Destructor (instance: " << this << ")" << std::endl;
+    std::cout << "ChatBot Destructor" << std::endl;
 
     // deallocate heap memory
-    if (_image != nullptr) // Attention: wxWidgets used NULL and not nullptr
+    if (_image != NULL) // Attention: wxWidgets uses NULL and not nullptr
     {
         delete _image;
-        _image = nullptr;
+        _image = NULL;
     }
 }
 
-// Copy constructor 
+// 2. Copy Constructor
 ChatBot::ChatBot(const ChatBot &source)
 {
-    std::cout << "COPYING content of instance " << &source << " to instance " << this << std::endl;
+    std::cout << "Chatbot copy constructor is called" << std::endl;
 
-    _chatLogic = source._chatLogic;
+    // copy class data
+    // Data handles (owned)
+    _image = new wxBitmap();
+    *_image = *source._image;
+
+    // Data handles (not owned)
+    _currentNode = source._currentNode;
     _rootNode = source._rootNode;
-    _image = new wxBitmap(*source._image);
+    _chatLogic = source._chatLogic;
 }
 
-// Copy assignment operator 
+// 3. Copy Assignment Operator
 ChatBot &ChatBot::operator=(const ChatBot &source)
 {
-    std::cout << "ASSIGNING content of instance " << &source << " to instance " << this << std::endl;
+    std::cout << "copy assignment operator: ASSIGNING content of instance " << &source << " to instance " << this << std::endl;
 
-    if (this != &source) {
-        delete _image;
-        _chatLogic = source._chatLogic;
-        _rootNode = source._rootNode;
-        _image = new wxBitmap(*source._image);
+    if (this == &source)
+    {
+        return *this;
     }
+
+    delete _image;
+    _image = new wxBitmap();
+    *_image = *source._image;
+
+    _currentNode = source._currentNode;
+    _rootNode = source._rootNode;
+    _chatLogic = source._chatLogic;
+    _chatLogic->SetChatbotHandle(this);
 
     return *this;
 }
 
-// Move constructor 
+// 4. Move Constructor
 ChatBot::ChatBot(ChatBot &&source)
 {
-    std::cout << "MOVING (constructor) instance " << &source << " to instance " << this << std::endl;
-    _chatLogic = source._chatLogic;
-    _rootNode = source._rootNode;
+    std::cout << "move constructor: MOVING (c’tor) instance " << &source << " to instance " << this << std::endl;
+
     _image = source._image;
-    source._chatLogic = nullptr;
+    source._image = NULL;
+
+    _currentNode = source._currentNode;
+    source._currentNode = nullptr;
+
+    _rootNode = source._rootNode;
     source._rootNode = nullptr;
-    source._image = nullptr;
+
+    _chatLogic = source._chatLogic;
+    source._chatLogic = nullptr;
+
+    _chatLogic->SetChatbotHandle(this);
 }
 
-// Move assignment operator
+// 5. Move Assignment Operator
 ChatBot &ChatBot::operator=(ChatBot &&source)
 {
-    std::cout << "MOVING (assign) instance " << &source << " to instance " << this << std::endl;
-    if (this != &source) {
-        delete _image;
-        _chatLogic = source._chatLogic;
-        _rootNode = source._rootNode;
-        _image = source._image;
-        source._chatLogic = nullptr;
-        source._rootNode = nullptr;
-        source._image = nullptr;
+    std::cout << "move assignment operator: MOVING (assign) instance " << &source << " to instance " << this << std::endl;
+
+    if (this == &source)
+    {
+        return *this;
     }
+    
+    delete _image;
+
+    _image = source._image;
+    _currentNode = source._currentNode;
+    _rootNode = source._rootNode;
+    _chatLogic = source._chatLogic;
+    _chatLogic->SetChatbotHandle(this);
+
+    source._image = NULL;
+    source._currentNode = nullptr;
+    source._rootNode = nullptr;
+    source._chatLogic = nullptr;
 
     return *this;
 }
 
-// Receive message and handle it
+// Method to receive message from user
 void ChatBot::ReceiveMessageFromUser(std::string message)
 {
     typedef std::pair<GraphEdge *, int> EdgeDist;
     std::vector<EdgeDist> levDists; // format is <ptr, levDist>
 
-    // Iterate over all edges and keywords to compute Levenshtein distance
     for (size_t i = 0; i < _currentNode->GetNumberOfChildEdges(); ++i)
     {
         GraphEdge *edge = _currentNode->GetChildEdgeAtIndex(i);
@@ -110,57 +142,65 @@ void ChatBot::ReceiveMessageFromUser(std::string message)
         }
     }
 
-    // Sort and choose best matching edge
-    GraphNode *newNode = _rootNode;
-    if (!levDists.empty())
+    // Select best fitting edge to proceed along
+    GraphNode *newNode;
+    if (levDists.size() > 0)
     {
+        // Sort in ascending order of Levenshtein distance (best fit is at the top)
         std::sort(levDists.begin(), levDists.end(), [](const EdgeDist &a, const EdgeDist &b) { return a.second < b.second; });
-        newNode = levDists.at(0).first->GetChildNode(); // Best edge is first after sorting
+        newNode = levDists.at(0).first->GetChildNode(); // After sorting, the best edge is at the first position
+    }
+    else
+    {
+        // Go back to root node
+        newNode = _rootNode;
     }
 
-    // Update chatbot to new node
+    // Tell current node to move chatbot to new node
     _currentNode->MoveChatbotToNewNode(newNode);
 }
 
-// Set the current node and reply to user
 void ChatBot::SetCurrentNode(GraphNode *node)
 {
+    // Update pointer to current node
     _currentNode = node;
 
-    // Randomly select an answer from available answers
+    // Select a random node answer (if several answers should exist)
     std::vector<std::string> answers = _currentNode->GetAnswers();
-    std::mt19937 generator(static_cast<unsigned int>(std::time(0)));
+    std::mt19937 generator(int(std::time(0)));
     std::uniform_int_distribution<int> dis(0, answers.size() - 1);
     std::string answer = answers.at(dis(generator));
 
-    _chatLogic->SetChatbotHandle(this); // Update chatbot for chatLogic
-    _chatLogic->SendMessageToUser(answer); // Send the selected answer to user
+    // Send selected node answer to user
+    _chatLogic->SendMessageToUser(answer);
 }
 
-// Compute the Levenshtein distance between two strings
 int ChatBot::ComputeLevenshteinDistance(std::string s1, std::string s2)
 {
     std::transform(s1.begin(), s1.end(), s1.begin(), ::toupper);
     std::transform(s2.begin(), s2.end(), s2.begin(), ::toupper);
 
-    size_t m = s1.size();
-    size_t n = s2.size();
+    const size_t m(s1.size());
+    const size_t n(s2.size());
 
-    if (m == 0) return n;
-    if (n == 0) return m;
+    if (m == 0)
+        return n;
+    if (n == 0)
+        return m;
 
     size_t *costs = new size_t[n + 1];
+
     for (size_t k = 0; k <= n; k++)
         costs[k] = k;
 
     size_t i = 0;
-    for (auto it1 = s1.begin(); it1 != s1.end(); ++it1, ++i)
+    for (std::string::const_iterator it1 = s1.begin(); it1 != s1.end(); ++it1, ++i)
     {
         costs[0] = i + 1;
         size_t corner = i;
 
         size_t j = 0;
-        for (auto it2 = s2.begin(); it2 != s2.end(); ++it2, ++j)
+        for (std::string::const_iterator it2 = s2.begin(); it2 != s2.end(); ++it2, ++j)
         {
             size_t upper = costs[j + 1];
             if (*it1 == *it2)
@@ -169,16 +209,13 @@ int ChatBot::ComputeLevenshteinDistance(std::string s1, std::string s2)
             }
             else
             {
-                size_t t = std::min(upper, corner);
-                costs[j + 1] = std::min(costs[j], t) + 1;
+                costs[j + 1] = std::min(std::min(costs[j] + 1, corner + 1), upper + 1);
             }
-
             corner = upper;
         }
     }
 
     int result = costs[n];
     delete[] costs;
-
     return result;
 }
