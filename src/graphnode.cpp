@@ -2,47 +2,46 @@
 #include "graphnode.h"
 
 GraphNode::GraphNode(int id)
+    : _id(id), _chatBot(nullptr)  // Sử dụng danh sách khởi tạo thay vì gán trong thân hàm
 {
-    _id = id;
 }
 
 GraphNode::~GraphNode()
 {
-    // Destructor không cần phải xử lý việc giải phóng _chatBot 
-    // vì nó đã được xử lý trong chatlogic.cpp
+    // Destructor để giải phóng tài nguyên nếu cần
 }
 
 void GraphNode::AddToken(std::string token)
 {
-    _answers.push_back(std::move(token));  // Dùng std::move để tránh sao chép không cần thiết
+    _answers.push_back(std::move(token));  // Di chuyển token vào vector
 }
 
-void GraphNode::AddEdgeToParentNode(GraphEdge *edge)
+void GraphNode::AddEdgeToParentNode(GraphEdge *edge) // incoming
 {
-    _parentEdges.push_back(edge);
+    _parentEdges.push_back(edge);  // Thêm edge vào danh sách parent
 }
 
-void GraphNode::AddEdgeToChildNode(std::unique_ptr<GraphEdge> edge)
+void GraphNode::AddEdgeToChildNode(std::unique_ptr<GraphEdge> edge) // outgoing
 {
-    // Sử dụng move semantics để chuyển quyền sở hữu của GraphEdge
-    _childEdges.push_back(std::move(edge));
+    _childEdges.push_back(std::move(edge)); // Di chuyển unique_ptr vào vector
 }
 
-void GraphNode::MoveChatbotHere(ChatBot chatbot)
+void GraphNode::MoveChatbotHere(std::unique_ptr<ChatBot> chatbot) // Task 5
 {
-    // Dùng std::move để chuyển quyền sở hữu chatbot
-    _chatBot = std::move(chatbot);
-    _chatBot.SetCurrentNode(this);
+    _chatBot = std::move(chatbot);  // Di chuyển chatbot vào node
+    _chatBot->SetCurrentNode(this); // Đặt node hiện tại cho chatbot
 }
 
 void GraphNode::MoveChatbotToNewNode(GraphNode *newNode)
 {
-    // Chuyển chatbot đến Node mới bằng move semantics
-    newNode->MoveChatbotHere(std::move(_chatBot));
+    newNode->MoveChatbotHere(std::move(_chatBot)); // Di chuyển chatbot sang node mới
+    // _chatBot được tự động null sau khi chuyển giao unique_ptr
 }
 
-GraphEdge *GraphNode::GetChildEdgeAtIndex(int index)
+GraphEdge* GraphNode::GetChildEdgeAtIndex(int index)
 {
-    // Trả về con trỏ thô của GraphEdge tại vị trí chỉ định
-    return _childEdges[index].get(); 
+    if (index < 0 || index >= _childEdges.size()) {
+        return nullptr; // Trả về nullptr nếu index không hợp lệ
+    }
+    return _childEdges[index].get();  // Lấy con trỏ raw từ unique_ptr
 }

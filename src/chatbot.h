@@ -3,52 +3,43 @@
 
 #include <wx/bitmap.h>
 #include <string>
+#define CB_IMAGE "../images/chatbot.png"
 
-class GraphNode; // forward declaration
-class ChatLogic; // forward declaration
+// Forward declarations for other classes
+class GraphNode;
+class ChatLogic;
 
-class ChatBot
-{
+class ChatBot {
 private:
-    // data handles (owned)
-    wxBitmap *_image; // avatar image
+    wxBitmap* _image; // Chatbot image handle
+    GraphNode* _currentNode; // Pointer to the current node in the conversation graph
+    GraphNode* _rootNode; // Pointer to the root node of the conversation graph
+    ChatLogic* _chatLogic; // Pointer to the ChatLogic class, which handles message exchanges
 
-    // data handles (not owned)
-    GraphNode *_currentNode;
-    GraphNode *_rootNode;
-    ChatLogic *_chatLogic;
-
-    // proprietary functions
-    int ComputeLevenshteinDistance(std::string s1, std::string s2); // number of characters that differs between strings -> 0 = same 
+    int ComputeLevenshteinDistance(const std::string& s1, const std::string& s2); // Levenshtein distance calculation
 
 public:
-    // constructors / destructors
-    ChatBot();                     // constructor WITHOUT memory allocation
-    ChatBot(std::string filename);  // constructor WITH memory allocation
-    ~ChatBot();
+    // Constructors and destructors
+    ChatBot(); // Default constructor (no memory allocation)
+    ChatBot(const std::string& filename); // Constructor with image loading
+    ~ChatBot(); // Destructor to clean up resources
 
-    // Task 2: declare the overloaded functions -> define in *.cpp
-    // 2. Copy constructor 
-    ChatBot(const ChatBot &source);
+    // Copy and move constructors and assignment operators
+    ChatBot(const ChatBot& source); // Copy constructor
+    ChatBot& operator=(const ChatBot& source); // Copy assignment operator
+    ChatBot(ChatBot&& source) noexcept; // Move constructor
+    ChatBot& operator=(ChatBot&& source) noexcept; // Move assignment operator
 
-    // 3. Copy Assignment Operator
-    ChatBot &operator=(const ChatBot &source);
+    // Setters
+    void SetCurrentNode(GraphNode* node); // Set the current conversation node
+    void SetRootNode(GraphNode* rootNode) { _rootNode = rootNode; } // Set the root node
+    void SetChatLogicHandle(ChatLogic* chatLogic) { _chatLogic = chatLogic; } // Set the chat logic
+    wxBitmap* GetImageHandle() { return _image; } // Get the image handle
 
-    // 4. Move Constructor
-    ChatBot(ChatBot &&source);
-
-    // 5. Move Assignment Operator 
-    ChatBot &operator=(ChatBot &&source);
-    
-    // getters / setters
-    void SetCurrentNode(GraphNode *node);
-    void SetRootNode(GraphNode *rootNode) { _rootNode = rootNode; }
-    void SetChatLogicHandle(ChatLogic *chatLogic) { _chatLogic = chatLogic; }
-    ChatLogic* GetChatLogicHandle() { return _chatLogic; }
-    wxBitmap *GetImageHandle() { return _image; }
-
-    // communication
-    void ReceiveMessageFromUser(std::string message);
+    // Main functionality
+    void ReceiveMessageFromUser(const std::string& message); // Process user input message
+    void SendMessageToUser(const std::string& message); // Send a message to the user
+    GraphNode* SelectBestEdge(const std::vector<std::pair<GraphEdge*, int>>& levDists); // Select the best matching edge
 };
 
-#endif /* CHATBOT_H_ */
+#endif // CHATBOT_H_

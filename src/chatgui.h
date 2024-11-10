@@ -2,90 +2,69 @@
 #define CHATGUI_H_
 
 #include <wx/wx.h>
-#include <memory>
+#include <memory> 
+#include <iostream> 
 
-class ChatLogic; // Forward declaration
+class ChatLogic; 
 
-// Middle part of the window containing the dialog between user and chatbot
+// Lớp panel chứa các đối thoại giữa người dùng và chatbot
 class ChatBotPanelDialog : public wxScrolledWindow
 {
 private:
-    // Control elements
-    wxBoxSizer *_dialogSizer;
+    // Các phần tử điều khiển
+    wxBoxSizer* _dialogSizer;
     wxBitmap _image;
 
-    // Smart pointer to chat logic
-    std::unique_ptr<ChatLogic> _chatLogic;
+    // Chỉ số hình ảnh của chatbot
+    wxStaticBitmap* _chatBotImg;
 
+    // Text để hiển thị đối thoại
+    wxStaticText* _chatBotTxt;
+    
 public:
-    // Constructor / Destructor
-    ChatBotPanelDialog(wxWindow *parent, wxWindowID id);
+    ChatBotPanelDialog(wxWindow* parent, wxWindowID id);
     ~ChatBotPanelDialog();
 
-    // Getter / Setter
-    ChatLogic *GetChatLogicHandle() { return _chatLogic.get(); }
-
-    // Events
-    void paintEvent(wxPaintEvent &evt);
-    void paintNow();
-    void render(wxDC &dc);
-
-    // Proprietary functions
-    void AddDialogItem(wxString text, bool isFromUser = true);
+    // Thêm phần tử đối thoại vào panel
+    void AddDialogItem(wxString text, bool isFromUser);
     void PrintChatbotResponse(std::string response);
+    void render(wxDC& dc);
 
-    DECLARE_EVENT_TABLE()
+    // Nhận điều khiển chat logic
+    ChatLogic* GetChatLogicHandle() { return _chatLogic.get(); }
+
+private:
+    // Nhận đối tượng từ chatbot
+    void paintEvent(wxPaintEvent& evt);
+    void paintNow();
 };
 
-// Dialog item shown in ChatBotPanelDialog
-class ChatBotPanelDialogItem : public wxPanel
+// Lớp chính hiển thị cửa sổ chatbot
+class ChatBotFrame : public wxFrame
 {
 private:
-    // Control elements
-    wxStaticText *_chatBotTxt;
-    wxStaticBitmap *_chatBotImg;
+    // Các đối tượng cần thiết cho frame
+    ChatBotPanelDialog* _panelDialog;
+    wxTextCtrl* _userTextCtrl;
 
 public:
-    // Constructor
-    ChatBotPanelDialogItem(wxPanel *parent, wxString text, bool isFromUser);
-
-    // Event handling
-    void paintEvent(wxPaintEvent &evt);
-    void paintNow();
-    void render(wxDC &dc);
+    ChatBotFrame(const wxString &title);
+    void OnEnter(wxCommandEvent& event);
 };
 
-// Panel that holds the background image
+// Panel chứa hình nền cho cửa sổ
 class ChatBotFrameImagePanel : public wxPanel
 {
 private:
     wxBitmap _image;
 
 public:
-    // Constructor
-    ChatBotFrameImagePanel(wxFrame *parent);
+    ChatBotFrameImagePanel(wxFrame* parent);
 
-    // Events
-    void paintEvent(wxPaintEvent &evt);
+    // Vẽ hình ảnh lên cửa sổ
+    void render(wxDC& dc);
+    void paintEvent(wxPaintEvent& evt);
     void paintNow();
-    void render(wxDC &dc);
 };
 
-// Main window
-class ChatBotFrame : public wxFrame
-{
-private:
-    // Control elements
-    wxTextCtrl *_userTextCtrl;
-    ChatBotPanelDialog *_panelDialog;
-
-public:
-    // Constructor
-    ChatBotFrame(const wxString &title);
-
-    // Event handling
-    void OnEnter(wxCommandEvent &event);
-    DECLARE_EVENT_TABLE()
-};
-
-#endif
+#endif /* CHATGUI_H_ */
