@@ -10,6 +10,9 @@ class ChatBot;
 class GraphEdge;
 class GraphNode;
 
+// Define tokenlist as an alias for std::vector<std::string>
+using tokenlist = std::vector<std::string>;
+
 class ChatLogic
 {
 private:
