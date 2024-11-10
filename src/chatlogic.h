@@ -3,8 +3,8 @@
 
 #include <vector>
 #include <string>
-#include "chatgui.h"
 #include <memory>
+#include "chatgui.h"
 
 class ChatBot;
 class GraphEdge;
@@ -14,15 +14,14 @@ class ChatLogic
 {
 private:
     std::vector<std::unique_ptr<GraphNode>> _nodes;
-
-    GraphNode *_currentNode;
-    ChatBot *_chatBot;
-    ChatBotPanelDialog *_panelDialog;
+    GraphNode *_currentNode = nullptr;
+    ChatBot *_chatBot = nullptr;
+    ChatBotPanelDialog *_panelDialog = nullptr;
 
     typedef std::vector<std::pair<std::string, std::string>> tokenlist;
 
     template <typename T>
-    void AddTokensToElement(std::string tokenID, tokenlist &tokens, T &element);
+    void AddAllTokensToElement(std::string tokenID, tokenlist &tokens, T &element);
 
 public:
     ChatLogic();
@@ -30,7 +29,6 @@ public:
 
     void SetPanelDialogHandle(ChatBotPanelDialog *panelDialog);
     void SetChatbotHandle(ChatBot *chatbot);
-
     void LoadAnswerGraphFromFile(std::string filename);
     void SendMessageToChatbot(std::string message);
     void SendMessageToUser(std::string message);

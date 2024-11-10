@@ -1,47 +1,43 @@
 #include "graphedge.h"
 #include "graphnode.h"
 
-GraphNode::GraphNode(int id)
-    : _id(id), _chatBot(nullptr)  // Sử dụng danh sách khởi tạo thay vì gán trong thân hàm
+GraphNode::GraphNode(int id) : _id(id), _chatBot(nullptr)
 {
+    // Khởi tạo ID và chatbot, trong đó chatbot khởi tạo với nullptr
 }
 
 GraphNode::~GraphNode()
 {
-    // Destructor để giải phóng tài nguyên nếu cần
+    // Không cần xoá _chatBot vì nó đã được quản lý bởi ChatLogic
 }
 
 void GraphNode::AddToken(std::string token)
 {
-    _answers.push_back(std::move(token));  // Di chuyển token vào vector
+    _answers.push_back(std::move(token)); // Đảm bảo tối ưu hoá khi thêm câu trả lời
 }
 
-void GraphNode::AddEdgeToParentNode(GraphEdge *edge) // incoming
+void GraphNode::AddEdgeToParentNode(GraphEdge *edge)
 {
-    _parentEdges.push_back(edge);  // Thêm edge vào danh sách parent
+    _parentEdges.push_back(edge); // Thêm cạnh vào danh sách cha
 }
 
-void GraphNode::AddEdgeToChildNode(std::unique_ptr<GraphEdge> edge) // outgoing
+void GraphNode::AddEdgeToChildNode(std::unique_ptr<GraphEdge> edge)
 {
-    _childEdges.push_back(std::move(edge)); // Di chuyển unique_ptr vào vector
+    _childEdges.push_back(std::move(edge)); // Sử dụng std::move để chuyển quyền sở hữu
 }
 
-void GraphNode::MoveChatbotHere(std::unique_ptr<ChatBot> chatbot) // Task 5
+void GraphNode::MoveChatbotHere(std::unique_ptr<ChatBot> chatbot)
 {
-    _chatBot = std::move(chatbot);  // Di chuyển chatbot vào node
-    _chatBot->SetCurrentNode(this); // Đặt node hiện tại cho chatbot
+    _chatBot = std::move(chatbot); // Chuyển quyền sở hữu của chatbot
+    _chatBot->SetCurrentNode(this); // Cập nhật nút hiện tại cho chatbot
 }
 
 void GraphNode::MoveChatbotToNewNode(GraphNode *newNode)
 {
-    newNode->MoveChatbotHere(std::move(_chatBot)); // Di chuyển chatbot sang node mới
-    // _chatBot được tự động null sau khi chuyển giao unique_ptr
+    newNode->MoveChatbotHere(std::move(_chatBot)); // Chuyển chatbot đến nút mới
 }
 
-GraphEdge* GraphNode::GetChildEdgeAtIndex(int index)
+GraphEdge *GraphNode::GetChildEdgeAtIndex(int index)
 {
-    if (index < 0 || index >= _childEdges.size()) {
-        return nullptr; // Trả về nullptr nếu index không hợp lệ
-    }
-    return _childEdges[index].get();  // Lấy con trỏ raw từ unique_ptr
+    return _childEdges[index].get(); // Trả về con trỏ thô từ unique_ptr
 }
