@@ -7,18 +7,18 @@
 #include "chatgui.h"
 
 // Kích thước cửa sổ chatbot
-const int WIDTH = 414;
-const int HEIGHT = 736;
+const int windowWidth = 414;
+const int windowHeight = 736;
 
-// Khởi tạo ứng dụng wxWidgets
+// Ứng dụng wxWidgets
 IMPLEMENT_APP(ChatBotApp);
 
-std::string dataPath = "../";
-std::string imgBasePath = dataPath + "images/";
+std::string resourcePath = "../";  // Đường dẫn đến tài nguyên
+std::string imageResourcePath = resourcePath + "images/";
 
 bool ChatBotApp::OnInit()
 {
-    // Tạo cửa sổ với tên và hiển thị
+    // Tạo cửa sổ với tên và hiển thị nó
     ChatBotFrame* chatBotFrame = new ChatBotFrame(wxT("Udacity ChatBot"));
     chatBotFrame->Show(true);
 
@@ -26,56 +26,55 @@ bool ChatBotApp::OnInit()
 }
 
 // Cửa sổ chính wxWidgets
-ChatBotFrame::ChatBotFrame(const wxString &title) 
-    : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxSize(WIDTH, HEIGHT))
+ChatBotFrame::ChatBotFrame(const wxString& title)
+    : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxSize(windowWidth, windowHeight))
 {
-    // Tạo panel với hình nền
-    ChatBotFrameImagePanel* ctrlPanel = new ChatBotFrameImagePanel(this);
+    // Tạo panel chứa hình nền
+    ChatBotFrameImagePanel* controlPanel = new ChatBotFrameImagePanel(this);
 
     // Tạo các điều khiển và gán chúng vào panel
-    _panelDialog = new ChatBotPanelDialog(ctrlPanel, wxID_ANY);
+    _panelDialog = new ChatBotPanelDialog(controlPanel, wxID_ANY);
 
-    // Tạo text control cho người dùng nhập liệu
-    int idTextCtrl = 1;
-    _userTextCtrl = new wxTextCtrl(ctrlPanel, idTextCtrl, "", wxDefaultPosition, wxSize(WIDTH, 50), wxTE_PROCESS_ENTER, wxDefaultValidator, wxTextCtrlNameStr);
-    Connect(idTextCtrl, wxEVT_TEXT_ENTER, wxCommandEventHandler(ChatBotFrame::OnEnter));
+    // Tạo ô nhập văn bản cho người dùng
+    int textCtrlId = 1;
+    _userTextCtrl = new wxTextCtrl(controlPanel, textCtrlId, "", wxDefaultPosition, wxSize(windowWidth, 50), wxTE_PROCESS_ENTER);
+    Connect(textCtrlId, wxEVT_TEXT_ENTER, wxCommandEventHandler(ChatBotFrame::OnEnter));
 
-    // Tạo sizer theo chiều dọc để sắp xếp các panel
-    wxBoxSizer* vertBoxSizer = new wxBoxSizer(wxVERTICAL);
-    vertBoxSizer->AddSpacer(90);
-    vertBoxSizer->Add(_panelDialog, 6, wxEXPAND | wxALL, 0);
-    vertBoxSizer->Add(_userTextCtrl, 1, wxEXPAND | wxALL, 5);
-    ctrlPanel->SetSizer(vertBoxSizer);
+    // Tạo sizer dọc cho việc căn chỉnh các phần tử và thêm các panel
+    wxBoxSizer* vertSizer = new wxBoxSizer(wxVERTICAL);
+    vertSizer->AddSpacer(90);
+    vertSizer->Add(_panelDialog, 6, wxEXPAND | wxALL, 0);
+    vertSizer->Add(_userTextCtrl, 1, wxEXPAND | wxALL, 5);
+    controlPanel->SetSizer(vertSizer);
 
-    // Đặt cửa sổ ở vị trí giữa màn hình
+    // Căn giữa cửa sổ trên màn hình
     this->Centre();
 }
 
 void ChatBotFrame::OnEnter(wxCommandEvent& event)
 {
-    // Lấy văn bản từ điều khiển nhập liệu
-    wxString userText = _userTextCtrl->GetLineText(0);
+    // Lấy văn bản từ ô nhập liệu
+    wxString userInput = _userTextCtrl->GetLineText(0);
 
-    // Thêm văn bản người dùng vào dialog
-    _panelDialog->AddDialogItem(userText, true);
+    // Thêm văn bản của người dùng vào dialog
+    _panelDialog->AddDialogItem(userInput, true);
 
-    // Xóa văn bản trong text control
+    // Xóa văn bản trong ô nhập liệu
     _userTextCtrl->Clear();
 
     // Gửi văn bản người dùng tới chatbot
-    _panelDialog->GetChatLogicHandle()->SendMessageToChatbot(std::string(userText.mb_str()));
+    _panelDialog->GetChatLogicHandle()->SendMessageToChatbot(std::string(userInput.mb_str()));
 }
 
 BEGIN_EVENT_TABLE(ChatBotFrameImagePanel, wxPanel)
-EVT_PAINT(ChatBotFrameImagePanel::paintEvent) // Xử lý sự kiện vẽ
+EVT_PAINT(ChatBotFrameImagePanel::paintEvent) // Bắt sự kiện vẽ
 END_EVENT_TABLE()
 
-ChatBotFrameImagePanel::ChatBotFrameImagePanel(wxFrame* parent) 
-    : wxPanel(parent)
+ChatBotFrameImagePanel::ChatBotFrameImagePanel(wxFrame* parent) : wxPanel(parent)
 {
 }
 
-void ChatBotFrameImagePanel::paintEvent(wxPaintEvent& evt)
+void ChatBotFrameImagePanel::paintEvent(wxPaintEvent& event)
 {
     wxPaintDC dc(this);
     render(dc);
@@ -89,46 +88,46 @@ void ChatBotFrameImagePanel::paintNow()
 
 void ChatBotFrameImagePanel::render(wxDC& dc)
 {
-    // Tải hình nền từ tệp
-    wxString imgFile = imgBasePath + "sf_bridge.jpg";
+    // Tải hình nền từ file
+    wxString imagePath = imageResourcePath + "sf_bridge.jpg";
     wxImage image;
-    image.LoadFile(imgFile);
+    image.LoadFile(imagePath);
 
-    // Chỉnh kích thước hình ảnh phù hợp với kích thước cửa sổ
-    wxSize sz = this->GetSize();
-    wxImage imgSmall = image.Rescale(sz.GetWidth(), sz.GetHeight(), wxIMAGE_QUALITY_HIGH);
-    _image = wxBitmap(imgSmall);
-    
+    // Thay đổi kích thước hình ảnh sao cho vừa với cửa sổ
+    wxSize windowSize = this->GetSize();
+    wxImage scaledImage = image.Rescale(windowSize.GetWidth(), windowSize.GetHeight(), wxIMAGE_QUALITY_HIGH);
+    _image = wxBitmap(scaledImage);
+
     dc.DrawBitmap(_image, 0, 0, false);
 }
 
 BEGIN_EVENT_TABLE(ChatBotPanelDialog, wxPanel)
-EVT_PAINT(ChatBotPanelDialog::paintEvent) // Xử lý sự kiện vẽ
+EVT_PAINT(ChatBotPanelDialog::paintEvent) // Bắt sự kiện vẽ
 END_EVENT_TABLE()
 
 ChatBotPanelDialog::ChatBotPanelDialog(wxWindow* parent, wxWindowID id)
     : wxScrolledWindow(parent, id)
 {
-    // Sizer sẽ tự động tính toán kích thước cần thiết cho thanh cuộn
-    _dialogSizer = new wxBoxSizer(wxVERTICAL);  // sử dụng new, nhưng cần phải delete sau khi không còn sử dụng
+    // Sizer sẽ tự động quyết định kích thước cuộn
+    _dialogSizer = new wxBoxSizer(wxVERTICAL);  
     this->SetSizer(_dialogSizer);
 
-    // Cho phép xử lý hình ảnh PNG
+    // Khởi tạo trình xử lý ảnh PNG
     wxInitAllImageHandlers();
 
-    // Tạo đối tượng chat logic
-    _chatLogic = std::make_unique<ChatLogic>();
+    // Tạo đối tượng ChatLogic
+    _chatLogic = std::make_unique<ChatLogic>(); // Dùng unique_ptr cho ChatLogic
 
-    // Gán panel dialog vào chat logic để hiển thị câu trả lời trên giao diện
+    // Truyền con trỏ đến dialog để hiển thị câu trả lời
     _chatLogic->SetPanelDialogHandle(this);
 
-    // Tải đồ thị câu trả lời từ tệp
-    _chatLogic->LoadAnswerGraphFromFile(dataPath + "src/answergraph.txt");
+    // Tải đồ thị câu trả lời từ file
+    _chatLogic->LoadAnswerGraphFromFile(resourcePath + "src/answergraph.txt");
 }
 
 ChatBotPanelDialog::~ChatBotPanelDialog()
 {
-    std::cout << "ChatBotPanelDialog destructor" << std::endl; // Xác nhận hàm destructor được gọi
+    std::cout << "ChatBotPanelDialog destructor" << std::endl; // Kiểm tra có được gọi hay không
 }
 
 void ChatBotPanelDialog::AddDialogItem(wxString text, bool isFromUser)
@@ -138,12 +137,12 @@ void ChatBotPanelDialog::AddDialogItem(wxString text, bool isFromUser)
     _dialogSizer->Add(item, 0, wxALL | (isFromUser ? wxALIGN_LEFT : wxALIGN_RIGHT), 8);
     _dialogSizer->Layout();
 
-    // Làm cho thanh cuộn xuất hiện
+    // Hiển thị thanh cuộn
     this->FitInside();
     this->SetScrollRate(5, 5);
     this->Layout();
 
-    // Cuộn xuống dưới để hiển thị phần tử mới nhất
+    // Cuộn đến cuối để hiển thị phần tử mới nhất
     int dx, dy;
     this->GetScrollPixelsPerUnit(&dx, &dy);
     int sy = dy * this->GetScrollLines(wxVERTICAL);
@@ -152,12 +151,12 @@ void ChatBotPanelDialog::AddDialogItem(wxString text, bool isFromUser)
 
 void ChatBotPanelDialog::PrintChatbotResponse(std::string response)
 {
-    // Chuyển đổi chuỗi thành wxString và thêm phần tử vào dialog
-    wxString botText(response.c_str(), wxConvUTF8);
-    AddDialogItem(botText, false);
+    // Chuyển đổi chuỗi thành wxString và thêm vào dialog
+    wxString botResponse(response.c_str(), wxConvUTF8);
+    AddDialogItem(botResponse, false);
 }
 
-void ChatBotPanelDialog::paintEvent(wxPaintEvent& evt)
+void ChatBotPanelDialog::paintEvent(wxPaintEvent& event)
 {
     wxPaintDC dc(this);
     render(dc);
@@ -172,35 +171,35 @@ void ChatBotPanelDialog::paintNow()
 void ChatBotPanelDialog::render(wxDC& dc)
 {
     wxImage image;
-    image.LoadFile(imgBasePath + "sf_bridge_inner.jpg");
+    image.LoadFile(imageResourcePath + "sf_bridge_inner.jpg");
 
-    wxSize sz = this->GetSize();
-    wxImage imgSmall = image.Rescale(sz.GetWidth(), sz.GetHeight(), wxIMAGE_QUALITY_HIGH);
+    wxSize panelSize = this->GetSize();
+    wxImage scaledImage = image.Rescale(panelSize.GetWidth(), panelSize.GetHeight(), wxIMAGE_QUALITY_HIGH);
 
-    _image = wxBitmap(imgSmall);
+    _image = wxBitmap(scaledImage);
     dc.DrawBitmap(_image, 0, 0, false);
 }
 
 ChatBotPanelDialogItem::ChatBotPanelDialogItem(wxPanel* parent, wxString text, bool isFromUser)
     : wxPanel(parent, -1, wxPoint(-1, -1), wxSize(-1, -1), wxBORDER_NONE)
 {
-    // Lấy hình ảnh từ chatbot khi tin nhắn đến từ chatbot
-    wxBitmap* bitmap = isFromUser ? nullptr : ((ChatBotPanelDialog*)parent)->GetChatLogicHandle()->GetImageFromChatbot(); 
+    // Tải hình ảnh từ chatbot nếu là câu trả lời từ chatbot
+    wxBitmap* bitmap = isFromUser ? nullptr : ((ChatBotPanelDialog*)parent)->GetChatLogicHandle()->GetImageFromChatbot();
 
     // Tạo hình ảnh và văn bản
-    _chatBotImg = new wxStaticBitmap(this, wxID_ANY, (isFromUser ? wxBitmap(imgBasePath + "user.png", wxBITMAP_TYPE_PNG) : *bitmap), wxPoint(-1, -1), wxSize(-1, -1));
+    _chatBotImg = new wxStaticBitmap(this, wxID_ANY, (isFromUser ? wxBitmap(imageResourcePath + "user.png", wxBITMAP_TYPE_PNG) : *bitmap), wxPoint(-1, -1), wxSize(-1, -1));
     _chatBotTxt = new wxStaticText(this, wxID_ANY, text, wxPoint(-1, -1), wxSize(150, -1), wxALIGN_CENTRE | wxBORDER_NONE);
     _chatBotTxt->SetForegroundColour(isFromUser ? wxColor(*wxBLACK) : wxColor(*wxWHITE));
 
-    // Tạo sizer ngang và thêm các phần tử vào
-    wxBoxSizer* horzBoxSizer = new wxBoxSizer(wxHORIZONTAL);
-    horzBoxSizer->Add(_chatBotTxt, 8, wxEXPAND | wxALL, 1);
-    horzBoxSizer->Add(_chatBotImg, 2, wxEXPAND | wxALL, 1);
-    this->SetSizer(horzBoxSizer);
+    // Tạo sizer ngang và thêm các phần tử
+    wxBoxSizer* horzSizer = new wxBoxSizer(wxHORIZONTAL);
+    horzSizer->Add(_chatBotTxt, 8, wxEXPAND | wxALL, 1);
+    horzSizer->Add(_chatBotImg, 2, wxEXPAND | wxALL, 1);
+    this->SetSizer(horzSizer);
 
-    // Cắt văn bản sau 150 pixel
+    // Gói văn bản lại sau 150 pixel
     _chatBotTxt->Wrap(150);
 
-    // Đặt màu nền
+    // Thiết lập màu nền
     this->SetBackgroundColour(isFromUser ? wxT("YELLOW") : wxT("BLUE"));
 }
