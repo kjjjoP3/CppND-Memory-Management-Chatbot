@@ -3,47 +3,64 @@
 
 #include <vector>
 #include <string>
-#include <memory>
 #include "chatbot.h"
+#include <memory> // AC for use of unique_ptr
 
-// Forward declaration
+
+// forward declarations
 class GraphEdge;
 
 class GraphNode
 {
 private:
-    // Danh sách các cạnh con (sở hữu)
-    std::vector<std::unique_ptr<GraphEdge>> _childEdges;
+    //// STUDENT CODE
+    ////
 
-    // Danh sách các cạnh cha (không sở hữu)
-    std::vector<GraphEdge *> _parentEdges;
+    // data handles (owned)
+    // std::vector<GraphEdge *> _childEdges;  // edges to subsequent nodes  .. AC 
+    std::vector< std::unique_ptr< GraphEdge > > _childEdges;    // AC add Task 4
 
-    // Con trỏ quản lý chatbot
+    // data handles (not owned)
+    std::vector<GraphEdge *> _parentEdges; // edges to preceding nodes // we are downstream.. What to do here?
+                                          // what smart pointer for a non-owning reference? Why weak_ptr? 
+    // std::vector< std::weak_ptr< GraphEdge > > _parentEdges;     // AC add
+
+    // ChatBot *_chatBot;  // AC Task 5
     std::unique_ptr<ChatBot> _chatBot;
 
-    // ID nút và danh sách câu trả lời
+    ////
+    //// EOF STUDENT CODE
+
+    // proprietary members
     int _id;
     std::vector<std::string> _answers;
 
 public:
-    // Hàm khởi tạo / huỷ
-    explicit GraphNode(int id);
+    // constructor / destructor
+    GraphNode(int id);
     ~GraphNode();
 
-    // Getter / Setter
-    int GetID() const { return _id; }
-    int GetNumberOfChildEdges() const { return _childEdges.size(); }
+    // getter / setter
+    int GetID() { return _id; }
+    int GetNumberOfChildEdges() { return _childEdges.size(); }
     GraphEdge *GetChildEdgeAtIndex(int index);
-    std::vector<std::string> GetAnswers() const { return _answers; }
-    int GetNumberOfParents() const { return _parentEdges.size(); }
+    std::vector<std::string> GetAnswers() { return _answers; }
+    int GetNumberOfParents() { return _parentEdges.size(); }
 
-    // Hàm xử lý cạnh và câu trả lời
-    void AddToken(std::string token);
+    // proprietary functions
+    void AddToken(std::string token); // add answers to list
     void AddEdgeToParentNode(GraphEdge *edge);
-    void AddEdgeToChildNode(std::unique_ptr<GraphEdge> edge);
+    // void AddEdgeToChildNode(GraphEdge *edge);   // also not called out by STUDENT CODE
+    void AddEdgeToChildNode( std::unique_ptr<GraphEdge> edge ); // AC Task 4, use std::move to pass
 
-    // Di chuyển chatbot
-    void MoveChatbotHere(std::unique_ptr<ChatBot> chatbot);
+    //// STUDENT CODE
+    ////
+
+    void MoveChatbotHere( std::unique_ptr<ChatBot> chatbot);    // AC Task 5 was ChatBot *
+
+    ////
+    //// EOF STUDENT CODE
+
     void MoveChatbotToNewNode(GraphNode *newNode);
 };
 

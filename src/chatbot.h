@@ -5,34 +5,45 @@
 #include <string>
 #define CB_IMAGE "../images/chatbot.png"
 
-class GraphNode;
-class ChatLogic;
+class GraphNode; // forward declaration
+class ChatLogic; // forward declaration
 
 class ChatBot
 {
 private:
-    wxBitmap *_image;
+    // data handles (owned)
+    wxBitmap *_image; // avatar image
+
+    // data handles (not owned)
     GraphNode *_currentNode;
     GraphNode *_rootNode;
     ChatLogic *_chatLogic;
 
+    // proprietary functions
     int ComputeLevenshteinDistance(std::string s1, std::string s2);
 
 public:
-    ChatBot();
-    ChatBot(std::string filename);
+    // constructors / destructors
+    ChatBot();                     // constructor WITHOUT memory allocation
+    ChatBot(std::string filename); // constructor WITH memory allocation
     ~ChatBot();
 
-    ChatBot(const ChatBot &source);
-    ChatBot &operator=(const ChatBot &source);
-    ChatBot(ChatBot &&source) noexcept;
-    ChatBot &operator=(ChatBot &&source) noexcept;
+    //// STUDENT CODE
 
+    ChatBot( const ChatBot &source );   // copy constructor
+    ChatBot &operator=(const ChatBot &source);  // copy assignment
+    ChatBot( ChatBot &&source);     // move constructor
+    ChatBot &operator=( ChatBot &&source);  // move assignment
+
+    //// EOF STUDENT CODE
+
+    // getters / setters
     void SetCurrentNode(GraphNode *node);
     void SetRootNode(GraphNode *rootNode) { _rootNode = rootNode; }
     void SetChatLogicHandle(ChatLogic *chatLogic) { _chatLogic = chatLogic; }
     wxBitmap *GetImageHandle() { return _image; }
 
+    // communication
     void ReceiveMessageFromUser(std::string message);
 };
 

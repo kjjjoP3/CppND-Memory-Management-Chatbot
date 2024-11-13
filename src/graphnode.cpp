@@ -3,41 +3,44 @@
 
 GraphNode::GraphNode(int id) : _id(id), _chatBot(nullptr)
 {
-    // Khởi tạo ID và chatbot, trong đó chatbot khởi tạo với nullptr
+    // Initialization handled in initializer list
 }
 
 GraphNode::~GraphNode()
 {
-    // Không cần xoá _chatBot vì nó đã được quản lý bởi ChatLogic
+    // No need for explicit deletion; _chatBot managed externally by ChatLogic
 }
 
 void GraphNode::AddToken(std::string token)
 {
-    _answers.push_back(std::move(token)); // Đảm bảo tối ưu hoá khi thêm câu trả lời
+    _answers.emplace_back(std::move(token)); // More efficient move operation
 }
 
 void GraphNode::AddEdgeToParentNode(GraphEdge *edge)
 {
-    _parentEdges.push_back(edge); // Thêm cạnh vào danh sách cha
+    _parentEdges.push_back(edge); // Store incoming edges directly
 }
 
 void GraphNode::AddEdgeToChildNode(std::unique_ptr<GraphEdge> edge)
 {
-    _childEdges.push_back(std::move(edge)); // Sử dụng std::move để chuyển quyền sở hữu
+    _childEdges.emplace_back(std::move(edge)); // Transfer ownership with move semantics
 }
 
 void GraphNode::MoveChatbotHere(std::unique_ptr<ChatBot> chatbot)
 {
-    _chatBot = std::move(chatbot); // Chuyển quyền sở hữu của chatbot
-    _chatBot->SetCurrentNode(this); // Cập nhật nút hiện tại cho chatbot
+    _chatBot = std::move(chatbot); // Assign ownership of ChatBot
+    _chatBot->SetCurrentNode(this); // Update ChatBot's current node
 }
 
 void GraphNode::MoveChatbotToNewNode(GraphNode *newNode)
 {
-    newNode->MoveChatbotHere(std::move(_chatBot)); // Chuyển chatbot đến nút mới
+    if (_chatBot) // Ensure _chatBot is not null before transferring
+    {
+        newNode->MoveChatbotHere(std::move(_chatBot)); // Transfer ownership to the target node
+    }
 }
 
-GraphEdge *GraphNode::GetChildEdgeAtIndex(int index)
+GraphEdge* GraphNode::GetChildEdgeAtIndex(int index)
 {
-    return _childEdges[index].get(); // Trả về con trỏ thô từ unique_ptr
+    return _childEdges[index].get(); // Retrieve raw pointer from unique_ptr
 }
